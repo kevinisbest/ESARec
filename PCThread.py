@@ -1,6 +1,10 @@
 import socket, Queue
 import cv2
 import demo
+from FastRCNN import *
+import _init_paths
+#from fast_rcnn.config import cfg
+
 
 #the info about deep PC
 DeepPCAddress = "192.168.1.0"
@@ -91,13 +95,28 @@ def fastRcnnThread(non, non2):
 	"""
 		The thread function to conduct Fast-Rcnn
 	"""
+
+"""
+	#import the object protocol file and caffe model
+	prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS	[args.demo_net][0], 'test.prototxt')
+    caffemodel = os.path.join(cfg.ROOT_DIR, 'data', 'fast_rcnn_models', NETS[args.demo_net][1])
+
+	#set GPU & build the CNN net
+	caffe.set_mode_gpu()
+	net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+
+	# Load pre-computed Selected Search object proposals
+    box_file = os.path.join(cfg.ROOT_DIR, 'mat', 'rootBoxes.mat')
+    obj_proposals = sio.loadmat(box_file)['boxes']
+
+
 	while True:
-		
+		if not _q.empty():
+			im = _q.get()
+
 		if not _q.full():
-			#conduct demo.py
-			pass
-		im = _q.get()
-		
+			FastRCNN(im, net, obj_proposals)
+	"""		
 
 
 def receiveImageProcess(sock):
@@ -142,11 +161,8 @@ def receiveImageProcess(sock):
 
 	#put image into queue
 	im = cv2.imread(ImageName)
-	print "{ Phone Connect Thread }: image: ", ImageName
-	print "{ Phone Connect Thread }: queue size: ", _q.qsize()
 	_q.put(im)
 	print "{ Phone Connect Thread }: put image into queue"
-	print "{ Phone Connect Thread }: queue size: ", _q.qsize()
 
 	fp.close()
 
