@@ -6,6 +6,7 @@ import _init_paths
 from fast_rcnn.config import cfg
 import caffe
 import scipy.io as sio
+import time
 
 #the info about deep PC
 DeepPCAddress = "192.168.1.0"
@@ -24,7 +25,9 @@ _q = Queue.Queue(10)
 __q = Queue.Queue(10)
 
 #interrupt judge
-isInterrupt = False
+isInterrupt1 = False
+isInterrupt2 = False
+
 
 #TCP error limit
 TCPErrorMax = 1000000
@@ -69,17 +72,23 @@ def PCsConnectThread(non, non2):
 			pcSocket.connect((DeepPCAddress, DeepPCPort))
 			print "{ PC Connect Thread }: Successfully connect to Deep PC!"
 
-			#run
-			#while True:
-			#	if not __q.empty():
-
+			#keep operate
+			while isInterrupt2:
+				2StateSend(pcSocket)
 
 		except:
 			print "destination error, check if the address or port wrong..."
+			time.sleep(2)
 
 
 	#done
 	pcSocket.close()
+
+
+def 2StateSend(sock):
+	"""
+	"""
+	pass
 
 
 def PCPhoneConnectThread(non, non2):
@@ -88,7 +97,7 @@ def PCPhoneConnectThread(non, non2):
 	"""
 	#global
 	global PhonePort
-	global isInterrupt
+	global isInterrupt1
 
 
 	#initialize the socket
@@ -101,7 +110,7 @@ def PCPhoneConnectThread(non, non2):
 	#loop to accept the image
 	while True:
 		#initialize
-		isInterrupt = False
+		isInterrupt1 = False
 
 		#accept the connection
 		print "{ Phone Connect Thread }: wait for connection"
@@ -109,7 +118,7 @@ def PCPhoneConnectThread(non, non2):
 		print "{ Phone Connect Thread }: Conencted to - " + str(address)
 
 		#keep receive the info
-		while not isInterrupt:
+		while not isInterrupt1:
 			print "{ Phone Connect Thread }: wait for command"
 			#check if want to send image
 			if checkCommand(operateSocket) == "IMAGEA":
@@ -222,14 +231,14 @@ def checkCommand(sock):
 	"""
 	#global
 	global BIT_LENGTH
-	global isInterrupt
+	global isInterrupt1
 
 	#receive the command
 	command = sock.recv(BIT_LENGTH)
 	print command
 	if command == "":
 		print "interrupt!"
-		isInterrupt = True
+		isInterrupt1 = True
 
 	#check if it's command
 	if len(command) == 6:
