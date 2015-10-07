@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -103,40 +104,48 @@ public class MainActivity extends AppCompatActivity {
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         OutputStream os = null;
+        InputStream is = null;
         //try {
-            //fis = new FileInputStream(myFile);
-            bis = new BufferedInputStream(fis);
+        //fis = new FileInputStream(myFile);
+        bis = new BufferedInputStream(fis);
 
-            //獲取輸出串流
-            try {
-                os = sock.getOutputStream();
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
+        //獲取輸出入串流
+        try {
+            os = sock.getOutputStream();
+            is = sock.getInputStream();
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
 
-            //告知即將開始傳
-            sendCommend(Constants.START_TO_SEND_IMAGE, os);
+        //告知即將開始傳
+        sendCommend(Constants.START_TO_SEND_IMAGE, os);
 
-            //傳送圖片
-            sendImage(imageName, os);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-            //EL告知傳送結束
-            sendCommend(Constants.END_SEND_IMAGE, os);
+        //if (receiveCommand(is))
+        //傳送圖片
+        sendImage(imageName, os);
+
+        //EL告知傳送結束
+        sendCommend(Constants.END_SEND_IMAGE, os);
 
 
-
-            //回收記憶體
-            try {
-                os.flush();
-                //sock.close();
-                bis.close();
-                //sock = null;
-                //status.setText("Socket is closed!");
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        //回收記憶體
+        try {
+            os.flush();
+            //sock.close();
+            bis.close();
+            //sock = null;
+            //status.setText("Socket is closed!");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
             /*
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
@@ -145,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
-    public void sendCommend(String commandString, OutputStream outputStream){
+    public void sendCommend(String commandString, OutputStream outputStream) {
         //傳輸物件
         BufferedInputStream bis;
         byte[] mybytearray = commandString.getBytes();
@@ -170,7 +179,25 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
-    public void sendImage(String imageName, OutputStream outputStream){
+    //定義檢查是否確認開始收圖片
+    public boolean receiveCommand(InputStream is) {
+        //接收物件
+        byte[] bytes = new byte[100];
+
+        //從輸入串流獲取資訊
+        try {
+            is.read(bytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String s = new String(bytes);
+        if (s == Constants.START_TO_SEND_IMAGE_ACK)
+            return true;
+        return false;
+    }
+
+    public void sendImage(String imageName, OutputStream outputStream) {
         //傳輸物件
         File myFile = new File(imageName);
         BufferedInputStream bis = null;

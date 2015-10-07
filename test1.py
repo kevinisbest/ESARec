@@ -1,8 +1,32 @@
-import Queue, cv2
+import sys
 
-_q = Queue.Queue(10)
+def PassTransferListToString(ll):
+	string = ""
+	for i in ll:
+		string += str(i)
+		string += ","
+	return string
 
-im = cv2.imread("image.jpg")
-print "q size: ", _q.qsize()
-_q.put(im)
-print "q size: ", _q.qsize()
+def PassTransferStringToList(ss):
+	ll = []
+	curr = 0
+	prev = 0
+	for i in ss:
+		if i == ',':
+			sub = ss[prev:curr]
+			ll.append(sub)
+			prev = curr+1
+		curr += 1
+	return ll
+	
+	
+
+ll = ['h', 'i', 12.345]
+string = PassTransferListToString(ll)
+print string
+lll = PassTransferStringToList(string)
+print lll
+
+
+
+#print lll
