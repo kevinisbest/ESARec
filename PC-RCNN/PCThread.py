@@ -50,6 +50,13 @@ NETS = {'vgg16': ('VGG16',
         'caffenet': ('CaffeNet',
                      'caffenet_fast_rcnn_iter_40000.caffemodel')}
 
+#Command between PCs
+START_SEND_IMAGE = "start send image"
+START_SEND_LIST = "start send list"
+END_SEND_IMAGE = "end send image"
+END_SEND_LIST = "end send list"
+
+
 
 def PCsConnectThread(non, non2):
 	"""
@@ -87,7 +94,31 @@ def PCsConnectThread(non, non2):
 
 def 2StateSend(sock):
 	"""
+		the function send image and the list of position saries
+		input	=> socket
 	"""
+	#global
+	global START_SEND_IMAGE
+	global START_SEND_LIST
+	global END_SEND_IMAGE
+	global END_SEND_LIST
+	
+	
+	#send request
+	sock.send(START_SEND_IMG)
+
+	#receive ACK
+	ack1 = checkCommand(sock)
+	if ack1 == START_SEND_IMG:
+		#send image
+
+		#send end msg
+
+		#receive ACK
+
+		#send list
+
+		#send end msg
 	pass
 
 
