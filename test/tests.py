@@ -1,4 +1,5 @@
-import cv2, socket
+#import cv2
+import socket
 import time
 
 #the info about deep PC
@@ -97,9 +98,46 @@ def twoStateSend(sock):
 		#send recv ACK
 		sock.send(START_SEND_LIST)
 
+		#receive list
+		bitInfo = sock.recv(BIT_LENGTH)
+		endInfo = sock.recv(len(END_SEND_LIST))
+		ll = PassTransferStringToList(bitInfo)
+		print ll
+
 
 	#recover timeout
 	sock.settimeout(None)
+
+
+def PassTransferListToString(ll):
+	"""
+		the function that can convert list to string(Socket Use)
+		input	=> list
+		output	=> string
+	"""
+	string = ""
+	for i in ll:
+		string += str(i)
+		string += ","
+	return string
+
+
+def PassTransferStringToList(ss):
+	"""
+		the function that can convert string to list(Socket Use)
+		input	=> string
+		output	=> list
+	"""
+	ll = []
+	curr = 0
+	prev = 0
+	for i in ss:
+		if i == ',':
+			sub = ss[prev:curr]
+			ll.append(sub)
+			prev = curr+1
+		curr += 1
+	return ll
 
 
 if __name__ == "__main__":

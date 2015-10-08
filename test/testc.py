@@ -1,8 +1,9 @@
-import cv2, socket
+#import cv2
+import socket
 import time
 
 #the info about deep PC
-DeepPCAddress = "192.168.1.131"
+DeepPCAddress = "192.168.0.102"
 DeepPCPort = 12334
 
 #the info about image
@@ -16,7 +17,7 @@ START_SEND_LIST = "start send list"
 END_SEND_IMAGE = "end send image"
 END_SEND_LIST = "end send list"
 
-def PCsConnectThread(im):
+def PCsConnectThread(im, _l):
 	"""
 		the PC connect thread function
 	"""
@@ -39,7 +40,7 @@ def PCsConnectThread(im):
 
 		#keep operate
 		#while True:
-		twoStateSend(pcSocket, im)
+		twoStateSend(pcSocket, im, _l)
 
 	except:
 		print "destination error, check if the address or port wrong..."
@@ -49,7 +50,7 @@ def PCsConnectThread(im):
 	#done
 	pcSocket.close()
 
-def twoStateSend(sock, im):
+def twoStateSend(sock, im, _l):
 	"""
 		the function send image and the list of position saries
 		input	=> socket
@@ -61,11 +62,11 @@ def twoStateSend(sock, im):
 	global END_SEND_LIST
 	global BIT_LENGTH
 	needToDrop = False
-	print "!"	
+
 	
 	#send request
 	sock.send(START_SEND_IMAGE)
-	print "!"
+
 	#receive ACK
 	ack1 = sock.recv(len(START_SEND_IMAGE))
 	if ack1 == START_SEND_IMAGE:
@@ -73,8 +74,8 @@ def twoStateSend(sock, im):
 	else:
 		needToDrop = True
 
-	print "!"
-	#send image
+
+	#send image(if accept correct ACK)
 	if needToDrop == False:
 		while True:
 			bitInfo = im.read(BIT_LENGTH)
@@ -95,12 +96,45 @@ def twoStateSend(sock, im):
 
 		#send list
 		if needToDrop == False:
-			print "complete!!!"
+			_s = PassTransferListToString(_l)
+			sock.send(_s)
 
-		#send end msg
+			#send end msg
+			sock.send(END_SEND_LIST)
+
+def PassTransferListToString(ll):
+	"""
+		the function that can convert list to string(Socket Use)
+		input	=> list
+		output	=> string
+	"""
+	string = ""
+	for i in ll:
+		string += str(i)
+		string += ","
+	return string
+
+
+def PassTransferStringToList(ss):
+	"""
+		the function that can convert string to list(Socket Use)
+		input	=> string
+		output	=> list
+	"""
+	ll = []
+	curr = 0
+	prev = 0
+	for i in ss:
+		if i == ',':
+			sub = ss[prev:curr]
+			ll.append(sub)
+			prev = curr+1
+		curr += 1
+	return ll
 
 if __name__ == "__main__":
 	im = open("000004.jpg", 'r')
-	PCsConnectThread(im)
+	_l = ['h', 'i', 12.345, 16.789]
+	PCsConnectThread(im, _l)
 	
 	
