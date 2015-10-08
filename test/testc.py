@@ -53,7 +53,7 @@ def PCsConnectThread(im, _l):
 def twoStateSend(sock, im, _l):
 	"""
 		the function send image and the list of position saries
-		input	=> socket
+		input	=> socket, list about position
 	"""
 	#global
 	global START_SEND_IMAGE

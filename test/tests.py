@@ -42,12 +42,12 @@ def PCsConnectThread():
 	print "{ Phone Connect Thread }: Conencted to - " + str(address)
 
 	#while isInterrupt:
-	twoStateSend(operateSocket)
+	twoStateAccept(operateSocket)
 
 	operateSocket.close()
 
 
-def twoStateSend(sock):
+def twoStateAccept(sock):
 	"""
 		test to accept image
 		input	=> socket

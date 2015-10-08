@@ -2,6 +2,7 @@ import socket, Queue
 import cv2, os
 import demo
 from FastRCNN import *
+import imageInfo
 import _init_paths
 from fast_rcnn.config import cfg
 import caffe
@@ -23,6 +24,7 @@ BIT_LENGTH = 1024
 #queue
 _q = Queue.Queue(10)
 __q = Queue.Queue(10)
+sendDeepBuffSize = 0
 
 #interrupt judge
 isInterrupt1 = False
@@ -81,7 +83,15 @@ def PCsConnectThread(non, non2):
 
 			#keep operate
 			while isInterrupt2:
-				2StateSend(pcSocket)
+				if sendDeepBuffSize > 0:
+					#initialize the image and list
+					_ = __q.get()
+					imgPtr = open(_, 'r')
+					__ = __q.get()
+
+					#send the result
+					twoStateSend(pcSocket, imgPtr, __)
+					sendDeepBuffSize -= 1
 
 		except:
 			print "destination error, check if the address or port wrong..."
@@ -92,33 +102,97 @@ def PCsConnectThread(non, non2):
 	pcSocket.close()
 
 
-def 2StateSend(sock):
+def twoStateSend(sock, im, _l):
 	"""
 		the function send image and the list of position saries
-		input	=> socket
+		input	=> socket, list about position
 	"""
 	#global
 	global START_SEND_IMAGE
 	global START_SEND_LIST
 	global END_SEND_IMAGE
 	global END_SEND_LIST
-	
+	global BIT_LENGTH
+	needToDrop = False
+
 	
 	#send request
-	sock.send(START_SEND_IMG)
+	sock.send(START_SEND_IMAGE)
+	print "{ PC Connect Thread }: Send Request(IMGE)"
 
 	#receive ACK
-	ack1 = checkCommand(sock)
-	if ack1 == START_SEND_IMG:
-		#send image
+	ack1 = sock.recv(BIT_LENGTH)
+	if ack1.find(START_SEND_IMAGE) != -1:
+		needToDrop = False
+		print "{ PC Connect Thread }: Receive Correct ACK(IMGE)"
+	else:
+		needToDrop = True
+		print "{ PC Connect Thread }: Receive Wrong ACK !!!(IMGE)"
+
+
+	#send image(if accept correct ACK)
+	if needToDrop == False:
+		print "{ PC Connect Thread }: Start Transferring(IMGE)"
+		while True:
+			bitInfo = im.read(BIT_LENGTH)
+			if not bitInfo:
+				break
+			sock.send(bitInfo)
+		print "{ PC Connect Thread }: Transfer Image Done"
 
 		#send end msg
+		sock.send(END_SEND_IMAGE)
 
 		#receive ACK
+		ack1 = sock.recv(BIT_LENGTH)
+		if ack1.find(START_SEND_LIST) != -1:
+			needToDrop = False
+			print "{ PC Connect Thread }: Receive Correct ACK(LIST)"
+		else:
+			needToDrop = True
+			print "{ PC Connect Thread }: Receive Wrong ACK !!!(LIST)"
 
 		#send list
+		if needToDrop == False:
+			_s = PassTransferListToString(_l)
+			sock.send(_s)
 
-		#send end msg
+			#send end msg
+			sock.send(END_SEND_LIST)
+			print "{ PC Connect Thread }: Complete All Step"			
+		else:
+			print "{ PC Connect Thread }: Wrong ACK, Next Step...(LIST)"
+
+
+def PassTransferListToString(ll):
+	"""
+		the function that can convert list to string(Socket Use)
+		input	=> list
+		output	=> string
+	"""
+	string = ""
+	for i in ll:
+		string += str(i)
+		string += ","
+	return string
+
+
+def PassTransferStringToList(ss):
+	"""
+		the function that can convert string to list(Socket Use)
+		input	=> string
+		output	=> list
+	"""
+	ll = []
+	curr = 0
+	prev = 0
+	for i in ss:
+		if i == ',':
+			sub = ss[prev:curr]
+			ll.append(sub)
+			prev = curr+1
+		curr += 1
+	return ll
 
 
 
@@ -187,11 +261,15 @@ def fastRcnnThread(non, non2):
 			canRun = True
 		if canRun:
 			if not _q.empty():
-				im = _q.get()
+				imi = _q.get()
+				im = imi.imagePtr
 
 			if not _q.full():
 				posLine = FastRCNN(im, net, obj_proposals)
 				print posLine
+				__q.put(imi.imageName)
+				__q.put(posLine)
+				sendDeepBuffSize += 1
 
 			if _q.empty():
 				canRun = False
@@ -246,7 +324,8 @@ def receiveImageProcess(sock):
 
 	#put image into queue
 	im = cv2.imread(ImageName)
-	_q.put(im)
+	imi = imageInfo(im, ImageName)
+	_q.put(imi)
 	print "{ Phone Connect Thread }: put image into queue"
 
 	#recover the block mode
