@@ -61,16 +61,21 @@ def twoStateSend(sock):
 
 
 	#receive request
-	ack1 = sock.recv(len(START_SEND_IMAGE))
+	ack1 = sock.recv(BIT_LENGTH)
+
 
 	#send ACK
-	if ack1 == START_SEND_IMAGE:
+	if ack1.find(START_SEND_IMAGE) != -1:
 		sock.send(START_SEND_IMAGE)
+		print "{ PC Connect Thread }: Receive Correct Request(IMGE)"
 	else:
 		needToDrop = True
+		print "{ PC Connect Thread }: Receive Wrong Request !!!(IMGE)"
 
+
+	#receive image(if accept correct request)
 	if needToDrop == False:
-		#receive image
+		print "{ PC Connect Thread }: Start Receiving"
 		fp = open("image.jpg", 'w')
 
 		#set timeout
@@ -87,9 +92,11 @@ def twoStateSend(sock):
 			print endString
 			if endString == END_SEND_IMAGE:
 				print endString
+				fp.write(elseString)
 				break
 			fp.write(bitInfo)
 
+		print "{ PC Connect Thread }: Receiving Done"
 		im = cv2.imread("image.jpg")
 		cv2.imshow("show", im)
 		#cv2.waitKey()
@@ -100,9 +107,10 @@ def twoStateSend(sock):
 
 		#receive list
 		bitInfo = sock.recv(BIT_LENGTH)
-		endInfo = sock.recv(len(END_SEND_LIST))
+		endInfo = sock.recv(BIT_LENGTH)
 		ll = PassTransferStringToList(bitInfo)
 		print ll
+		print "{ PC Connect Thread }: Complete All Step"			
 
 
 	#recover timeout

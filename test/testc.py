@@ -66,33 +66,39 @@ def twoStateSend(sock, im, _l):
 	
 	#send request
 	sock.send(START_SEND_IMAGE)
+	print "{ PC Connect Thread }: Send Request(IMGE)"
 
 	#receive ACK
-	ack1 = sock.recv(len(START_SEND_IMAGE))
-	if ack1 == START_SEND_IMAGE:
+	ack1 = sock.recv(BIT_LENGTH)
+	if ack1.find(START_SEND_IMAGE) != -1:
 		needToDrop = False
+		print "{ PC Connect Thread }: Receive Correct ACK(IMGE)"
 	else:
 		needToDrop = True
+		print "{ PC Connect Thread }: Receive Wrong ACK !!!(IMGE)"
 
 
 	#send image(if accept correct ACK)
 	if needToDrop == False:
+		print "{ PC Connect Thread }: Start Transferring(IMGE)"
 		while True:
 			bitInfo = im.read(BIT_LENGTH)
 			if not bitInfo:
 				break
 			sock.send(bitInfo)
-		print "{ PC Connect Thread }: Transfer Image Done."
+		print "{ PC Connect Thread }: Transfer Image Done"
 
 		#send end msg
 		sock.send(END_SEND_IMAGE)
 
 		#receive ACK
-		ack1 = sock.recv(len(START_SEND_IMAGE))
-		if ack1 == START_SEND_LIST:
+		ack1 = sock.recv(BIT_LENGTH)
+		if ack1.find(START_SEND_LIST) != -1:
 			needToDrop = False
+			print "{ PC Connect Thread }: Receive Correct ACK(LIST)"
 		else:
 			needToDrop = True
+			print "{ PC Connect Thread }: Receive Wrong ACK !!!(LIST)"
 
 		#send list
 		if needToDrop == False:
@@ -101,6 +107,10 @@ def twoStateSend(sock, im, _l):
 
 			#send end msg
 			sock.send(END_SEND_LIST)
+			print "{ PC Connect Thread }: Complete All Step"			
+		else:
+			print "{ PC Connect Thread }: Wrong ACK, Next Step...(LIST)"
+
 
 def PassTransferListToString(ll):
 	"""
