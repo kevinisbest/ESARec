@@ -10,7 +10,7 @@ import scipy.io as sio
 import time
 
 #the info about deep PC
-DeepPCAddress = "192.168.1.0"
+DeepPCAddress = "192.168.1.90"
 DeepPCPort = 12332
 
 #the info about phone
@@ -67,6 +67,7 @@ def PCsConnectThread(non, non2):
 	#global
 	global DeepPCAddress
 	global DeepPCPort
+	global sendDeepBuffSize
 
 	#initialize the socket
 	pcSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -82,7 +83,7 @@ def PCsConnectThread(non, non2):
 			print "{ PC Connect Thread }: Successfully connect to Deep PC!"
 
 			#keep operate
-			while isInterrupt2:
+			while not isInterrupt2:
 				if sendDeepBuffSize > 0:
 					#initialize the image and list
 					_ = __q.get()
@@ -241,6 +242,7 @@ def fastRcnnThread(non, non2):
 	"""
 	#global
 	global canRun
+	global sendDeepBuffSize
 
 
 	#import the object protocol file and caffe model
@@ -324,7 +326,7 @@ def receiveImageProcess(sock):
 
 	#put image into queue
 	im = cv2.imread(ImageName)
-	imi = imageInfo(im, ImageName)
+	imi = imageInfo.imageInfo(im, ImageName)
 	_q.put(imi)
 	print "{ Phone Connect Thread }: put image into queue"
 

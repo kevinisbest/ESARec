@@ -169,7 +169,7 @@ def DeepJudgeThread(non, non2):
 		if imageQueue.qsize() != 0 and DeepQueue.qsize() != 0:
 			im = imageQueue.get()
 			cv2.imshow("show", im)
-			cv2.waitKey(0.1)
+			cv2.waitKey()
 			_ = DeepQueue.get()
 			print _
 			print "imageQueue size: ", imageQueue.qsize()
