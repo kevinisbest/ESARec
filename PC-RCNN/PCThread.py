@@ -119,7 +119,7 @@ def 2StateSend(sock):
 		#send list
 
 		#send end msg
-	pass
+
 
 
 def PCPhoneConnectThread(non, non2):
