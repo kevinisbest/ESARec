@@ -4,6 +4,9 @@ import cv2, os
 #the info about deep PC
 DeepPCPort = 12332
 
+#the info about phone
+PhonePort = 10018
+
 #the info about image
 ImageName = "image.jpg"
 #BIT_LENGTH = 262144
@@ -15,6 +18,7 @@ isInterrupt = True
 #queue
 imageQueue = Queue.Queue(10)
 DeepQueue = Queue.Queue(10)
+_q = Queue.Queue(10)
 
 #Command between PCs
 START_SEND_IMAGE = "start send image"
@@ -156,7 +160,38 @@ def PCPhoneConnectThread(non, non2):
 	"""
 		the phone connect thread function
 	"""
-	pass
+	#global
+	global PhonePort
+	global isInterrupt
+
+
+	#initialize the socket
+	phoneSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	phoneSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	phoneSocket.bind(("", PhonePort))
+	phoneSocket.listen(1)
+	print "{ Phone Connect Thread }: done socket initialization"
+
+	#loop to accept the image
+	while True:
+		#initialize
+		isInterrupt = False
+
+		#accept the connection
+		print "{ Phone Connect Thread }: wait for connection"
+		operateSocket, address = phoneSocket.accept()
+		print "{ Phone Connect Thread }: Conencted to - " + str(address)
+
+		#keep receive the info
+		print "{ Phone Connect Thread }: wait for result"
+		while not isInterrupt1:
+			#check if want to send image
+			if _q.qsize() > 0:
+				_s = _q.get()
+				operateSocket.send(_s)
+
+		operateSocket.close()
+
 
 def DeepJudgeThread(non, non2):
 	"""
@@ -169,11 +204,12 @@ def DeepJudgeThread(non, non2):
 		if imageQueue.qsize() != 0 and DeepQueue.qsize() != 0:
 			im = imageQueue.get()
 			cv2.imshow("show", im)
-			cv2.waitKey()
+			cv2.waitKey(0.1)
 			_ = DeepQueue.get()
 			print _
 			print "imageQueue size: ", imageQueue.qsize()
 			print "deepQueue size: ", DeepQueue.qsize()
+			_q.put("there is a person in front of you")
 
 
 

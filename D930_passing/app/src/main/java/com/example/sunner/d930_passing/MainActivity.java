@@ -21,10 +21,11 @@ import java.net.UnknownHostException;
 public class MainActivity extends AppCompatActivity {
 
     int bytesRead;
-    Socket sock = null;
+    Socket imgSock = null, resSock = null;
     Button bt_connect, bt_send1, bt_send2;
     EditText ipAddress;
     TextView status;
+    Thread thread, resThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +73,44 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void connectDevice() {
+        //建立線程抓取結果
+        final Thread resThread = new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                InputStream is = null;
+
+                //獲取輸入串流
+                try {
+                    while (resSock==null);
+                    is = resSock.getInputStream();
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+
+                if (is == null)
+                    Log.e(Constants.LLOG, "結果串流為空");
+                else {
+                    while (true) {
+                        //接收物件
+                        byte[] bytes = new byte[100];
+
+                        //從輸入串流獲取資訊
+                        try {
+                            is.read(bytes);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        String s = new String(bytes);
+                        Log.i(Constants.LLOG, "判斷結果：" + s);
+                    }
+                }
+
+            }
+        };
+
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -80,7 +119,8 @@ public class MainActivity extends AppCompatActivity {
                 //連接
                 try {
                     Log.i(Constants.LLOG, "嘗試連接...");
-                    sock = new Socket(ipAddress.getText().toString(), Constants.PORT_NUMBER);
+                    imgSock = new Socket(ipAddress.getText().toString(), Constants.PORT1_NUMBER);
+                    resSock = new Socket("192.168.1.90", Constants.PORT2_NUMBER);
                 } catch (UnknownHostException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -89,10 +129,14 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                if (sock == null)
-                    Log.i(Constants.LLOG, "socket為空");
-                else
+                if (imgSock == null)
+                    Log.e(Constants.LLOG, "image socket為空");
+                else if (resSock == null)
+                    Log.e(Constants.LLOG, "result socket為空");
+                else {
                     Log.i(Constants.LLOG, "已連接");
+                    resThread.start();
+                }
             }
         };
         thread.start();
@@ -104,15 +148,13 @@ public class MainActivity extends AppCompatActivity {
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         OutputStream os = null;
-        InputStream is = null;
         //try {
         //fis = new FileInputStream(myFile);
         bis = new BufferedInputStream(fis);
 
-        //獲取輸出入串流
+        //獲取輸出串流
         try {
-            os = sock.getOutputStream();
-            is = sock.getInputStream();
+            os = imgSock.getOutputStream();
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -245,5 +287,13 @@ public class MainActivity extends AppCompatActivity {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        thread.interrupt();
+        resThread.interrupt();
+
     }
 }
