@@ -87,19 +87,19 @@ def twoStateAccept(sock):
 		fp = open("image.jpg", 'w')
 
 		#set timeout
-		sock.settimeout(2)
+		sock.settimeout(5)
 		while True:
 			try:
 				bitInfo = sock.recv(BIT_LENGTH)
-			except socket.Timeouterror:
+			except socket.timeout:
 				break
 
 			#check close
 			endString = bitInfo[len(bitInfo)-len(END_SEND_IMAGE):]
 			elseString = bitInfo[:len(bitInfo)-len(END_SEND_IMAGE)]
-			print endString
+			#print endString
 			if endString == END_SEND_IMAGE:
-				print endString
+				#print endString
 				fp.write(elseString)
 				break
 			fp.write(bitInfo)

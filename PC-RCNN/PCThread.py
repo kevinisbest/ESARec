@@ -157,6 +157,7 @@ def twoStateSend(sock, im, _l):
 		#send list
 		if needToDrop == False:
 			_s = PassTransferListToString(_l)
+			time.sleep(0.5)
 			sock.send(_s)
 
 			#send end msg
@@ -307,7 +308,7 @@ def receiveImageProcess(sock):
 		
 		#check if the bitinfo is error
 		#if not bitInfo:
-		print "bitInfo: ", bitInfo
+		#print "bitInfo: ", bitInfo
 		#	break
 		
 
