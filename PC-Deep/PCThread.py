@@ -10,10 +10,10 @@ PhonePort = 10018
 #the info about image
 ImageName = "image.jpg"
 #BIT_LENGTH = 262144
-BIT_LENGTH = 1024
+BIT_LENGTH = 65536
 
 #variable to interrupt looping in PCsConnectThread
-isInterrupt = True
+isInterrupt = False
 
 #queue
 imageQueue = Queue.Queue(10)
@@ -49,7 +49,7 @@ def PCsConnectThread(non, non2):
 		operateSocket, address = rcnnSocket.accept()
 		print "{ Phone Connect Thread }: Conencted to - " + str(address)
 
-		while isInterrupt:
+		while not isInterrupt:
 			twoStateAccept(operateSocket)
 
 		operateSocket.close()
@@ -69,6 +69,7 @@ def twoStateAccept(sock):
 
 	#receive request
 	ack1 = sock.recv(BIT_LENGTH)
+	print "{ PC Connect Thread }: Receive Request(IMGE): ", ack1
 
 
 	#send ACK
@@ -86,11 +87,11 @@ def twoStateAccept(sock):
 		fp = open("image.jpg", 'w')
 
 		#set timeout
-		sock.settimeout(0.1)
+		sock.settimeout(2)
 		while True:
 			try:
 				bitInfo = sock.recv(BIT_LENGTH)
-			except timeout:
+			except socket.Timeouterror:
 				break
 
 			#check close
@@ -114,7 +115,7 @@ def twoStateAccept(sock):
 
 		#receive list
 		bitInfo = sock.recv(BIT_LENGTH)
-		endInfo = sock.recv(BIT_LENGTH)
+		#endInfo = sock.recv(BIT_LENGTH)
 		ll = PassTransferStringToList(bitInfo)
 		#print ll
 		DeepQueue.put(ll)
@@ -204,7 +205,7 @@ def DeepJudgeThread(non, non2):
 		if imageQueue.qsize() != 0 and DeepQueue.qsize() != 0:
 			im = imageQueue.get()
 			cv2.imshow("show", im)
-			cv2.waitKey(0.1)
+			#cv2.waitKey(1)
 			_ = DeepQueue.get()
 			print _
 			print "imageQueue size: ", imageQueue.qsize()

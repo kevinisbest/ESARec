@@ -19,7 +19,7 @@ PhonePort = 10017
 #the info about image
 ImageName = "image.jpg"
 #BIT_LENGTH = 262144
-BIT_LENGTH = 1024
+BIT_LENGTH = 65536
 
 #queue
 _q = Queue.Queue(10)
@@ -99,8 +99,8 @@ def PCsConnectThread(non, non2):
 			time.sleep(2)
 
 
-	#done
-	pcSocket.close()
+		#done
+		pcSocket.close()
 
 
 def twoStateSend(sock, im, _l):
@@ -129,6 +129,7 @@ def twoStateSend(sock, im, _l):
 	else:
 		needToDrop = True
 		print "{ PC Connect Thread }: Receive Wrong ACK !!!(IMGE)"
+		print ack1
 
 
 	#send image(if accept correct ACK)
@@ -159,7 +160,7 @@ def twoStateSend(sock, im, _l):
 			sock.send(_s)
 
 			#send end msg
-			sock.send(END_SEND_LIST)
+			#sock.send(END_SEND_LIST)
 			print "{ PC Connect Thread }: Complete All Step"			
 		else:
 			print "{ PC Connect Thread }: Wrong ACK, Next Step...(LIST)"

@@ -20,14 +20,19 @@ CLASSES = ('__background__',
            'motorbike', 'person', 'pottedplant',
            'sheep', 'sofa', 'train', 'tvmonitor')
 
+#list return
+_l_ = []
+
 def FastRCNN(im, net, obj_proposals):
 	"""
 		Fast R-CNN main function
 		input	=> image fileptr
-		output	=> ??
+		output	=> list about position and category
 	"""
 	#global
 	global classes
+	global _l_
+	_l_ = []
 
 	# Detect all object classes and regress object bounds
 	timer = Timer()
@@ -53,8 +58,8 @@ def FastRCNN(im, net, obj_proposals):
                                                                     CONF_THRESH)
 
 		#draw the result on image
-		posList = vis_detections(im, cls, dets, thresh=CONF_THRESH)
-	return posList
+		vis_detections(im, cls, dets, thresh=CONF_THRESH)
+	return _l_
 
 def vis_detections(im, class_name, dets, thresh=0.5):
 	"""
@@ -62,6 +67,9 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 		input	=> image, object name, position array, threshhold value
 		output	=> list included object name and position array
 	"""
+	#global
+	global _l_
+
 	#initialize
 	posList = []
 
@@ -76,6 +84,7 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 	for i in inds:
 		bbox = dets[i, :4]
 		score = dets[i, -1]
+		#print "before posList: ", posList
 
 		#check the value
 		print "bbox: ", bbox
@@ -87,9 +96,11 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 			class_name_def += i
 		posList += class_name_def
 		print "add: ", class_name_def, " type: ", type(class_name_def)
+		#print "after1 posList: ", posList
 
 		#add position list to sum one
 		posList += bbox
+		#print "after2 posList: ", posList
 
 
 		#draw rectangle
@@ -108,4 +119,5 @@ def vis_detections(im, class_name, dets, thresh=0.5):
 	#show the picture??
 	#plt.show()
 	#plt.clear()
-	return posList
+	if len(posList) != 0:
+		_l_ += posList
